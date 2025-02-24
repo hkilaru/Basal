@@ -9,41 +9,78 @@ import SwiftUI
 import HealthKit
 
 struct ContentView: View {
-    @StateObject private var healthKitManager = HealthKitManager()
+    @EnvironmentObject var hkManager: HKManager
+    @State private var showWelcomeSheet = false
+    
+    // Define units and icons for each metric
+    private let metricInfo: [String: (unit: String, icon: String, color: Color)] = [
+        "Steps": ("steps", "figure.walk", .green),
+        "Heart Rate": ("BPM", "heart.fill", .red),
+        "Active Energy": ("kcal", "flame.fill", .orange),
+        "Resting Heart Rate": ("BPM", "heart.circle.fill", .pink),
+        "Heart Rate Variability": ("ms", "waveform.path.ecg", .purple)
+    ]
     
     var body: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "heart.text.clipboard")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, HealthKit!")
-            Button(action: {
-                // Check if the app is running in a preview
-                #if DEBUG
-                if !isPreview {
-                    guard HKHealthStore.isHealthDataAvailable() else {
-                        print("HealthKit is not available on this device")
-                        return
+        NavigationView {
+            List {
+                ForEach(Array(hkManager.healthData.keys.sorted()), id: \.self) { metric in
+                    HStack(spacing: 12) {
+                        // Icon
+                        Image(systemName: metricInfo[metric]?.icon ?? "questionmark.circle")
+                            .foregroundStyle(metricInfo[metric]?.color ?? .gray)
+                            .font(.system(size: 24))
+                            .frame(width: 32, height: 32)
+                        
+                        // Metric name
+                        Text(metric)
+                            .font(.body)
+                        
+                        Spacer()
+                        
+                        // Value with unit
+                        VStack(alignment: .trailing) {
+                            Text("\(hkManager.healthData[metric] ?? 0, specifier: "%.0f")")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            Text(metricInfo[metric]?.unit ?? "")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
-                    healthKitManager.requestAuthorization()
-                } else {
-                    print("Button tapped in preview mode - no action taken.")
+                    .padding(.vertical, 4)
                 }
-                #endif
-            }) {
-                Text("Connect HealthKit")
             }
-            .buttonStyle(.borderedProminent)
+            .navigationTitle("Health Data")
+            .toolbar {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    Button {
+                        Task {
+                            await hkManager.fetchTodaysData()
+                        }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundStyle(.blue)
+                    }
+                    
+                    Button {
+                        showWelcomeSheet = true
+                    } label: {
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(.blue)
+                    }
+                }
+            }
+            .sheet(isPresented: $showWelcomeSheet) {
+                WelcomeView(isWelcomeSheetPresented: $showWelcomeSheet)
+                    .environmentObject(hkManager)
+            }
         }
-        .padding()
-    }
-    
-    // Helper to check if the view is in preview mode
-    private var isPreview: Bool {
-        return ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
     }
 }
 
 #Preview {
     ContentView()
+        .environmentObject(HKManager())
 }
