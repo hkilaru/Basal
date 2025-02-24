@@ -1,0 +1,7 @@
+-This is the base of an open source SwiftUI app that uses HealthKit.
+-The primary goal is to learn Apple's latest best practices in using HealthKit in a SwiftUI app.
+-Never use third-party libraries.
+-For complex functions, add comments and unit tests.
+-Others will be using this code as a starting point to build their own apps using HealthKit.
+-Keep the code clean and easy to understand.
+-Keep code maintainable and separate files by functionality. If a file is doing too many things, break it up.

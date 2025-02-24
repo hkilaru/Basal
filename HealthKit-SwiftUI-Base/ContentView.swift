@@ -9,11 +9,16 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
+        VStack(spacing: 10) {
+            Image(systemName: "heart.text.clipboard")
                 .imageScale(.large)
                 .foregroundStyle(.tint)
-            Text("Hello, world!")
+            Text("Hello, HealthKit!")
+            Button(action: {
+                print("Button pressed")
+            }) {
+                Text("Connect HealthKit")
+            }.buttonStyle(.borderedProminent)
         }
         .padding()
     }
