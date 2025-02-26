@@ -692,8 +692,13 @@ class HKManager: ObservableObject {
             workoutData.activeEnergyBurned = activeEnergyValue
         }
         
-        // For elevation gain, we'll use flightsClimbed as a proxy
-        if let flightsClimbedType = HKObjectType.quantityType(forIdentifier: .flightsClimbed) {
+        // Fix for elevation gain - first check workout metadata
+        if let metadata = workout.metadata,
+           let elevationAscended = metadata[HKMetadataKeyElevationAscended] as? NSNumber {
+            // Metadata values are stored in meters, convert to feet
+            workoutData.elevationGain = elevationAscended.doubleValue * 3.28084
+        } else if let flightsClimbedType = HKObjectType.quantityType(forIdentifier: .flightsClimbed) {
+            // Fallback to flightsClimbed if metadata isn't available
             let flightsValue = await fetchWorkoutMetric(
                 for: workout,
                 quantityType: flightsClimbedType,
@@ -702,6 +707,31 @@ class HKManager: ObservableObject {
             )
             // Approximate: 1 flight ≈ 10 feet
             workoutData.elevationGain = flightsValue * 10
+        }
+        
+        // Fix for pace - calculate from distance and duration for running workouts
+        if workout.workoutActivityType == .running || workout.workoutActivityType == .walking {
+            if let distance = workout.totalDistance?.doubleValue(for: HKUnit.meter()),
+               distance > 0 && workout.duration > 0 {
+                // Calculate pace in seconds per meter
+                let pace = workout.duration / distance
+                workoutData.averagePace = pace
+            } else {
+                // Try to get pace from running speed
+                if let speedType = HKObjectType.quantityType(forIdentifier: .runningSpeed) {
+                    let speedValue = await fetchWorkoutMetric(
+                        for: workout,
+                        quantityType: speedType,
+                        unit: HKUnit.meter().unitDivided(by: HKUnit.second()),
+                        options: .discreteAverage
+                    )
+                    
+                    if speedValue > 0 {
+                        // Convert speed to pace (seconds per meter)
+                        workoutData.averagePace = 1.0 / speedValue
+                    }
+                }
+            }
         }
         
         // Fetch power data (for cycling, strength training)
@@ -726,8 +756,6 @@ class HKManager: ObservableObject {
             )
             
             if speedValue > 0 {
-                workoutData.averagePace = 1.0 / speedValue
-                
                 // Estimate cadence based on speed
                 // For running, typical stride length is about 0.7-1.0 meters
                 // Cadence = Speed / Stride Length
