@@ -38,11 +38,11 @@ struct SummaryView: View {
                                 color: metricInfo[metric]?.color ?? .gray
                             )
                         } label: {
-                            metricRow(for: metric, value: latestValueFor(metric: metric))
+                            metricRow(for: metric, value: displayValueFor(metric: metric))
                         }
                     } else {
                         // Regular row for other metrics
-                        metricRow(for: metric, value: hkManager.healthData[metric] ?? 0)
+                        metricRow(for: metric, value: displayValueFor(metric: metric))
                     }
                 }
             }
@@ -73,13 +73,11 @@ struct SummaryView: View {
         }
     }
     
-    // Helper function to get the latest value for a metric
-    private func latestValueFor(metric: String) -> Double {
+    // Helper function to get the display value for a metric
+    private func displayValueFor(metric: String) -> Double {
         switch metric {
         case "Heart Rate":
             return hkManager.latestHeartRate
-        case "Steps":
-            return hkManager.latestSteps
         case "Heart Rate Variability":
             return hkManager.latestHRV
         default:

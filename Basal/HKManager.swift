@@ -19,7 +19,6 @@ class HKManager: ObservableObject {
     
     // Store the latest values
     @Published var latestHeartRate: Double = 0
-    @Published var latestSteps: Double = 0
     @Published var latestHRV: Double = 0
     
     // Store individual samples
@@ -226,9 +225,6 @@ class HKManager: ObservableObject {
         
         await MainActor.run {
             self.stepsSamples = samples
-            if let firstSample = samples.first {
-                self.latestSteps = firstSample.value
-            }
         }
     }
     
