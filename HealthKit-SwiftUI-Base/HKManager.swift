@@ -12,7 +12,7 @@ class HKManager: ObservableObject {
         "Heart Rate": 0,
         "Active Energy": 0,
         "Resting Heart Rate": 0,
-        "Heart Rate Variability SDNN": 0
+        "Heart Rate Variability": 0
     ]
     
     private var allTypesToRead: Set<HKSampleType> {
@@ -122,7 +122,7 @@ class HKManager: ObservableObject {
             healthData["Heart Rate"] = heartRateValue
             healthData["Active Energy"] = energyBurned
             healthData["Resting Heart Rate"] = restingHeartRateValue
-            healthData["Heart Rate Variability SDNN"] = heartRateVariabilitySDNNValue
+            healthData["Heart Rate Variability"] = heartRateVariabilitySDNNValue
         }
     }
     
