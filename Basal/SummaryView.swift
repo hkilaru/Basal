@@ -42,6 +42,21 @@ struct SummaryView: View {
                     Text("Sleep")
                 }
                 
+                // Workouts section
+                if !hkManager.workoutCollection.todaysWorkouts.isEmpty {
+                    Section {
+                        ForEach(hkManager.workoutCollection.todaysWorkouts) { workout in
+                            NavigationLink {
+                                WorkoutDetailView(workout: workout)
+                            } label: {
+                                workoutRow(workout)
+                            }
+                        }
+                    } header: {
+                        Text("Today's Workouts")
+                    }
+                }
+                
                 // Health metrics section
                 Section {
                     ForEach(Array(hkManager.healthData.keys.sorted().filter { $0 != "Sleep" }), id: \.self) { metric in
@@ -182,6 +197,51 @@ struct SummaryView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+        }
+        .padding(.vertical, 4)
+    }
+    
+    // Helper to create workout rows
+    private func workoutRow(_ workout: WorkoutData) -> some View {
+        // Create formatter outside the view builder
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        
+        return HStack(spacing: 12) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(Color.black.opacity(0.8))
+                    .frame(width: 40, height: 40)
+                
+                Image(systemName: workout.iconName)
+                    .foregroundColor(.green)
+                    .font(.system(size: 20))
+            }
+            
+            // Workout info
+            VStack(alignment: .leading, spacing: 4) {
+                Text(workout.displayName)
+                    .font(.body)
+                
+                // Show either distance or calories based on workout type
+                if let distance = workout.formattedDistance {
+                    Text(distance)
+                        .font(.title2)
+                        .foregroundColor(.green)
+                } else if let calories = workout.formattedCalories {
+                    Text(calories)
+                        .font(.title2)
+                        .foregroundColor(.green)
+                }
+            }
+            
+            Spacer()
+            
+            // Time of workout
+            Text(formatter.string(from: workout.startDate))
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
         .padding(.vertical, 4)
     }

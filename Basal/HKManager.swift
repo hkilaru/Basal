@@ -30,6 +30,9 @@ class HKManager: ObservableObject {
     // Sleep data
     @Published var sleepData: SleepData = SleepData()
     
+    // Workout data
+    @Published var workoutCollection: WorkoutCollection = WorkoutCollection()
+    
     // Define which metrics have time-series data
     let timeSeriesMetrics = ["Heart Rate", "Steps", "Heart Rate Variability", "Sleep"]
     
@@ -42,7 +45,8 @@ class HKManager: ObservableObject {
             HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN)!,
             HKObjectType.quantityType(forIdentifier: .height)!,
             HKObjectType.quantityType(forIdentifier: .bodyMass)!,
-            HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!
+            HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!,
+            HKObjectType.workoutType()
         ] as Set<HKSampleType>
     }
     
@@ -144,6 +148,9 @@ class HKManager: ObservableObject {
         
         // Fetch sleep data for last night
         await fetchLastNightSleepData()
+        
+        // Fetch workouts
+        await fetchWorkouts()
         
         // Update the UI with all fetched values
         await MainActor.run {
@@ -578,6 +585,211 @@ class HKManager: ObservableObject {
                 sleepData.startTime = firstInterval.startDate
                 sleepData.endTime = lastInterval.endDate
             }
+        }
+    }
+    
+    // MARK: - Workout Methods
+    
+    func fetchWorkouts() async {
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfDay = calendar.startOfDay(for: now)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        
+        // Create the predicate for the query
+        let predicate = HKQuery.predicateForSamples(
+            withStart: startOfDay,
+            end: endOfDay,
+            options: .strictStartDate
+        )
+        
+        // Sort by date, most recent first
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+        
+        do {
+            let samples = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[HKSample], Error>) in
+                let query = HKSampleQuery(
+                    sampleType: HKObjectType.workoutType(),
+                    predicate: predicate,
+                    limit: HKObjectQueryNoLimit,
+                    sortDescriptors: [sortDescriptor]
+                ) { _, samples, error in
+                    if let error = error {
+                        continuation.resume(throwing: error)
+                        return
+                    }
+                    
+                    guard let samples = samples else {
+                        continuation.resume(returning: [])
+                        return
+                    }
+                    
+                    continuation.resume(returning: samples)
+                }
+                
+                healthStore.execute(query)
+            }
+            
+            // Process the workout samples
+            var workouts: [WorkoutData] = []
+            
+            for sample in samples {
+                if let workout = sample as? HKWorkout {
+                    // Get source information
+                    let sourceInfo = determineSourceInfo(from: workout)
+                    
+                    // Create a workout data object
+                    var workoutData = WorkoutData(
+                        workoutType: workout.workoutActivityType,
+                        startDate: workout.startDate,
+                        endDate: workout.endDate,
+                        duration: workout.duration,
+                        totalEnergyBurned: workout.totalEnergyBurned?.doubleValue(for: .kilocalorie()),
+                        totalDistance: workout.totalDistance?.doubleValue(for: .meter()),
+                        source: sourceInfo.name,
+                        deviceType: sourceInfo.type,
+                        workoutEvents: workout.workoutEvents,
+                        metadata: workout.metadata
+                    )
+                    
+                    // Fetch additional metrics for this workout
+                    await fetchAdditionalMetrics(for: workout, into: &workoutData)
+                    
+                    workouts.append(workoutData)
+                }
+            }
+            
+            // Update the workout collection on the main actor
+            await MainActor.run {
+                self.workoutCollection.workouts = workouts
+            }
+        } catch {
+            print("Error fetching workouts: \(error.localizedDescription)")
+        }
+    }
+    
+    // Fetch additional metrics for a workout
+    private func fetchAdditionalMetrics(for workout: HKWorkout, into workoutData: inout WorkoutData) async {
+        // Fetch heart rate data
+        if let heartRateType = HKObjectType.quantityType(forIdentifier: .heartRate) {
+            let heartRateValue = await fetchWorkoutMetric(
+                for: workout,
+                quantityType: heartRateType,
+                unit: HKUnit(from: "count/min"),
+                options: .discreteAverage
+            )
+            workoutData.averageHeartRate = heartRateValue
+        }
+        
+        // Fetch active energy burned
+        if let activeEnergyType = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) {
+            let activeEnergyValue = await fetchWorkoutMetric(
+                for: workout,
+                quantityType: activeEnergyType,
+                unit: HKUnit.kilocalorie(),
+                options: .cumulativeSum
+            )
+            workoutData.activeEnergyBurned = activeEnergyValue
+        }
+        
+        // For elevation gain, we'll use flightsClimbed as a proxy
+        if let flightsClimbedType = HKObjectType.quantityType(forIdentifier: .flightsClimbed) {
+            let flightsValue = await fetchWorkoutMetric(
+                for: workout,
+                quantityType: flightsClimbedType,
+                unit: HKUnit.count(),
+                options: .cumulativeSum
+            )
+            // Approximate: 1 flight ≈ 10 feet
+            workoutData.elevationGain = flightsValue * 10
+        }
+        
+        // Fetch power data (for cycling, strength training)
+        if let powerType = HKObjectType.quantityType(forIdentifier: .basalEnergyBurned) {
+            let powerValue = await fetchWorkoutMetric(
+                for: workout,
+                quantityType: powerType,
+                unit: HKUnit.watt(),
+                options: .cumulativeSum
+            )
+            workoutData.averagePower = powerValue
+        }
+        
+        // For cadence, we'll calculate it from speed and stride length
+        // First, get the running speed
+        if let speedType = HKObjectType.quantityType(forIdentifier: .runningSpeed) {
+            let speedValue = await fetchWorkoutMetric(
+                for: workout,
+                quantityType: speedType,
+                unit: HKUnit.meter().unitDivided(by: HKUnit.second()),
+                options: .discreteAverage
+            )
+            
+            if speedValue > 0 {
+                workoutData.averagePace = 1.0 / speedValue
+                
+                // Estimate cadence based on speed
+                // For running, typical stride length is about 0.7-1.0 meters
+                // Cadence = Speed / Stride Length
+                // We'll use an average stride length of 0.85 meters
+                let estimatedStrideLength = 0.85 // meters
+                let estimatedCadence = (speedValue / estimatedStrideLength) * 60 // steps per minute
+                workoutData.averageCadence = estimatedCadence
+            }
+        } else {
+            // If running speed isn't available, try to get stride length and steps directly
+            // This is a fallback and may not be available for all workouts
+            if let stepsType = HKObjectType.quantityType(forIdentifier: .stepCount) {
+                let stepsValue = await fetchWorkoutMetric(
+                    for: workout,
+                    quantityType: stepsType,
+                    unit: HKUnit.count(),
+                    options: .cumulativeSum
+                )
+                
+                if stepsValue > 0 && workout.duration > 0 {
+                    // Calculate cadence as steps per minute
+                    let cadence = (stepsValue / workout.duration) * 60
+                    workoutData.averageCadence = cadence
+                }
+            }
+        }
+    }
+    
+    // Fetch a specific metric for a workout
+    private func fetchWorkoutMetric(
+        for workout: HKWorkout,
+        quantityType: HKQuantityType,
+        unit: HKUnit,
+        options: HKStatisticsOptions
+    ) async -> Double {
+        // Create a predicate to get samples that belong to this workout
+        let predicate = HKQuery.predicateForObjects(from: workout)
+        
+        return await withCheckedContinuation { continuation in
+            let statisticsQuery = HKStatisticsQuery(
+                quantityType: quantityType,
+                quantitySamplePredicate: predicate,
+                options: options
+            ) { _, statistics, error in
+                if let error = error {
+                    print("Error fetching workout metric: \(error.localizedDescription)")
+                    continuation.resume(returning: 0.0)
+                    return
+                }
+                
+                var value: Double = 0
+                if let statistics = statistics {
+                    if options == .discreteAverage {
+                        value = statistics.averageQuantity()?.doubleValue(for: unit) ?? 0
+                    } else {
+                        value = statistics.sumQuantity()?.doubleValue(for: unit) ?? 0
+                    }
+                }
+                continuation.resume(returning: value)
+            }
+            
+            healthStore.execute(statisticsQuery)
         }
     }
 }

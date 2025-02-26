@@ -1,6 +1,6 @@
 # Basal
 
-A basic SwiftUI app that requests and displays data from HealthKit.
+A basic SwiftUI app that requests and displays HealthKit data almost identically to Apple's Health and Fitness apps. Use it as a starting point for building your own HealthKit apps.
 
 ## Testing in Simulator
 
