@@ -12,37 +12,37 @@
 			containerPortal = 3F3330C52D6CE30000D0CD38 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 3F3330CC2D6CE30000D0CD38;
-			remoteInfo = "HealthKit-SwiftUI-Base";
+			remoteInfo = "Basal";
 		};
 		3F3330E82D6CE30200D0CD38 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 3F3330C52D6CE30000D0CD38 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 3F3330CC2D6CE30000D0CD38;
-			remoteInfo = "HealthKit-SwiftUI-Base";
+			remoteInfo = "Basal";
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		3F3330CD2D6CE30000D0CD38 /* HealthKit-SwiftUI-Base.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "HealthKit-SwiftUI-Base.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		3F3330DD2D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "HealthKit-SwiftUI-BaseTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		3F3330E72D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "HealthKit-SwiftUI-BaseUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F3330CD2D6CE30000D0CD38 /* Basal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Basal.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F3330DD2D6CE30200D0CD38 /* BasalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "BasalTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F3330E72D6CE30200D0CD38 /* BasalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "BasalUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		3F3330CF2D6CE30000D0CD38 /* HealthKit-SwiftUI-Base */ = {
+		3F3330CF2D6CE30000D0CD38 /* Basal */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "HealthKit-SwiftUI-Base";
+			path = Basal;
 			sourceTree = "<group>";
 		};
-		3F3330E02D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseTests */ = {
+		3F3330E02D6CE30200D0CD38 /* BasalTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "HealthKit-SwiftUI-BaseTests";
+			path = BasalTests;
 			sourceTree = "<group>";
 		};
-		3F3330EA2D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseUITests */ = {
+		3F3330EA2D6CE30200D0CD38 /* BasalUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "HealthKit-SwiftUI-BaseUITests";
+			path = BasalUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -75,9 +75,9 @@
 		3F3330C42D6CE30000D0CD38 = {
 			isa = PBXGroup;
 			children = (
-				3F3330CF2D6CE30000D0CD38 /* HealthKit-SwiftUI-Base */,
-				3F3330E02D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseTests */,
-				3F3330EA2D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseUITests */,
+				3F3330CF2D6CE30000D0CD38 /* Basal */,
+				3F3330E02D6CE30200D0CD38 /* BasalTests */,
+				3F3330EA2D6CE30200D0CD38 /* BasalUITests */,
 				3F3330CE2D6CE30000D0CD38 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -85,9 +85,9 @@
 		3F3330CE2D6CE30000D0CD38 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3F3330CD2D6CE30000D0CD38 /* HealthKit-SwiftUI-Base.app */,
-				3F3330DD2D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseTests.xctest */,
-				3F3330E72D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseUITests.xctest */,
+				3F3330CD2D6CE30000D0CD38 /* Basal.app */,
+				3F3330DD2D6CE30200D0CD38 /* BasalTests.xctest */,
+				3F3330E72D6CE30200D0CD38 /* BasalUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,9 +95,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		3F3330CC2D6CE30000D0CD38 /* HealthKit-SwiftUI-Base */ = {
+		3F3330CC2D6CE30000D0CD38 /* Basal */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3F3330F12D6CE30200D0CD38 /* Build configuration list for PBXNativeTarget "HealthKit-SwiftUI-Base" */;
+			buildConfigurationList = 3F3330F12D6CE30200D0CD38 /* Build configuration list for PBXNativeTarget "Basal" */;
 			buildPhases = (
 				3F3330C92D6CE30000D0CD38 /* Sources */,
 				3F3330CA2D6CE30000D0CD38 /* Frameworks */,
@@ -108,18 +108,18 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				3F3330CF2D6CE30000D0CD38 /* HealthKit-SwiftUI-Base */,
+				3F3330CF2D6CE30000D0CD38 /* Basal */,
 			);
-			name = "HealthKit-SwiftUI-Base";
+			name = "Basal";
 			packageProductDependencies = (
 			);
-			productName = "HealthKit-SwiftUI-Base";
-			productReference = 3F3330CD2D6CE30000D0CD38 /* HealthKit-SwiftUI-Base.app */;
+			productName = "Basal";
+			productReference = 3F3330CD2D6CE30000D0CD38 /* Basal.app */;
 			productType = "com.apple.product-type.application";
 		};
-		3F3330DC2D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseTests */ = {
+		3F3330DC2D6CE30200D0CD38 /* BasalTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3F3330F42D6CE30200D0CD38 /* Build configuration list for PBXNativeTarget "HealthKit-SwiftUI-BaseTests" */;
+			buildConfigurationList = 3F3330F42D6CE30200D0CD38 /* Build configuration list for PBXNativeTarget "BasalTests" */;
 			buildPhases = (
 				3F3330D92D6CE30200D0CD38 /* Sources */,
 				3F3330DA2D6CE30200D0CD38 /* Frameworks */,
@@ -131,18 +131,18 @@
 				3F3330DF2D6CE30200D0CD38 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				3F3330E02D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseTests */,
+				3F3330E02D6CE30200D0CD38 /* BasalTests */,
 			);
-			name = "HealthKit-SwiftUI-BaseTests";
+			name = "BasalTests";
 			packageProductDependencies = (
 			);
-			productName = "HealthKit-SwiftUI-BaseTests";
-			productReference = 3F3330DD2D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseTests.xctest */;
+			productName = "BasalTests";
+			productReference = 3F3330DD2D6CE30200D0CD38 /* BasalTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		3F3330E62D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseUITests */ = {
+		3F3330E62D6CE30200D0CD38 /* BasalUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3F3330F72D6CE30200D0CD38 /* Build configuration list for PBXNativeTarget "HealthKit-SwiftUI-BaseUITests" */;
+			buildConfigurationList = 3F3330F72D6CE30200D0CD38 /* Build configuration list for PBXNativeTarget "BasalUITests" */;
 			buildPhases = (
 				3F3330E32D6CE30200D0CD38 /* Sources */,
 				3F3330E42D6CE30200D0CD38 /* Frameworks */,
@@ -154,13 +154,13 @@
 				3F3330E92D6CE30200D0CD38 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				3F3330EA2D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseUITests */,
+				3F3330EA2D6CE30200D0CD38 /* BasalUITests */,
 			);
-			name = "HealthKit-SwiftUI-BaseUITests";
+			name = "BasalUITests";
 			packageProductDependencies = (
 			);
-			productName = "HealthKit-SwiftUI-BaseUITests";
-			productReference = 3F3330E72D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseUITests.xctest */;
+			productName = "BasalUITests";
+			productReference = 3F3330E72D6CE30200D0CD38 /* BasalUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -186,7 +186,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 3F3330C82D6CE30000D0CD38 /* Build configuration list for PBXProject "HealthKit-SwiftUI-Base" */;
+			buildConfigurationList = 3F3330C82D6CE30000D0CD38 /* Build configuration list for PBXProject "Basal" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -200,9 +200,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				3F3330CC2D6CE30000D0CD38 /* HealthKit-SwiftUI-Base */,
-				3F3330DC2D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseTests */,
-				3F3330E62D6CE30200D0CD38 /* HealthKit-SwiftUI-BaseUITests */,
+				3F3330CC2D6CE30000D0CD38 /* Basal */,
+				3F3330DC2D6CE30200D0CD38 /* BasalTests */,
+				3F3330E62D6CE30200D0CD38 /* BasalUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -258,12 +258,12 @@
 /* Begin PBXTargetDependency section */
 		3F3330DF2D6CE30200D0CD38 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 3F3330CC2D6CE30000D0CD38 /* HealthKit-SwiftUI-Base */;
+			target = 3F3330CC2D6CE30000D0CD38 /* Basal */;
 			targetProxy = 3F3330DE2D6CE30200D0CD38 /* PBXContainerItemProxy */;
 		};
 		3F3330E92D6CE30200D0CD38 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 3F3330CC2D6CE30000D0CD38 /* HealthKit-SwiftUI-Base */;
+			target = 3F3330CC2D6CE30000D0CD38 /* Basal */;
 			targetProxy = 3F3330E82D6CE30200D0CD38 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -393,10 +393,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "HealthKit-SwiftUI-Base/HealthKit-SwiftUI-Base.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Basal/Basal.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"HealthKit-SwiftUI-Base/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Basal/Preview Content\"";
 				DEVELOPMENT_TEAM = 9BA339SW8L;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -411,7 +411,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.HealthKit-SwiftUI-Base";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.Basal";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -424,10 +424,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "HealthKit-SwiftUI-Base/HealthKit-SwiftUI-Base.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Basal/Basal.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"HealthKit-SwiftUI-Base/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Basal/Preview Content\"";
 				DEVELOPMENT_TEAM = 9BA339SW8L;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -442,7 +442,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.HealthKit-SwiftUI-Base";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.Basal";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -460,12 +460,12 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.HealthKit-SwiftUI-BaseTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.BasalTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HealthKit-SwiftUI-Base.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/HealthKit-SwiftUI-Base";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Basal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Basal";
 			};
 			name = Debug;
 		};
@@ -479,12 +479,12 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.HealthKit-SwiftUI-BaseTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.BasalTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HealthKit-SwiftUI-Base.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/HealthKit-SwiftUI-Base";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Basal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Basal";
 			};
 			name = Release;
 		};
@@ -496,12 +496,12 @@
 				DEVELOPMENT_TEAM = 9BA339SW8L;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.HealthKit-SwiftUI-BaseUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.BasalUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = "HealthKit-SwiftUI-Base";
+				TEST_TARGET_NAME = "Basal";
 			};
 			name = Debug;
 		};
@@ -513,19 +513,19 @@
 				DEVELOPMENT_TEAM = 9BA339SW8L;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.HealthKit-SwiftUI-BaseUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.BasalUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = "HealthKit-SwiftUI-Base";
+				TEST_TARGET_NAME = "Basal";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		3F3330C82D6CE30000D0CD38 /* Build configuration list for PBXProject "HealthKit-SwiftUI-Base" */ = {
+		3F3330C82D6CE30000D0CD38 /* Build configuration list for PBXProject "Basal" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3F3330EF2D6CE30200D0CD38 /* Debug */,
@@ -534,7 +534,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		3F3330F12D6CE30200D0CD38 /* Build configuration list for PBXNativeTarget "HealthKit-SwiftUI-Base" */ = {
+		3F3330F12D6CE30200D0CD38 /* Build configuration list for PBXNativeTarget "Basal" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3F3330F22D6CE30200D0CD38 /* Debug */,
@@ -543,7 +543,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		3F3330F42D6CE30200D0CD38 /* Build configuration list for PBXNativeTarget "HealthKit-SwiftUI-BaseTests" */ = {
+		3F3330F42D6CE30200D0CD38 /* Build configuration list for PBXNativeTarget "BasalTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3F3330F52D6CE30200D0CD38 /* Debug */,
@@ -552,7 +552,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		3F3330F72D6CE30200D0CD38 /* Build configuration list for PBXNativeTarget "HealthKit-SwiftUI-BaseUITests" */ = {
+		3F3330F72D6CE30200D0CD38 /* Build configuration list for PBXNativeTarget "BasalUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3F3330F82D6CE30200D0CD38 /* Debug */,

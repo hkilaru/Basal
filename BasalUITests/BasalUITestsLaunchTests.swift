@@ -1,13 +1,13 @@
 //
-//  HealthKit_SwiftUI_BaseUITestsLaunchTests.swift
-//  HealthKit-SwiftUI-BaseUITests
+//  BasalUITestsLaunchTests.swift
+//  BasalUITests
 //
 //  Created by Harish Kilaru on 2/24/25.
 //
 
 import XCTest
 
-final class HealthKit_SwiftUI_BaseUITestsLaunchTests: XCTestCase {
+final class BasalUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

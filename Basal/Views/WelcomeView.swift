@@ -76,16 +76,11 @@ struct WelcomeView: View {
             
             // Bottom text and button
             VStack(spacing: 20) {
-                Text("Welcome to Health")
+                Text("Welcome to Basal")
                     .font(.largeTitle)
                     .bold()
                 
-                Text("It's a simple starter kit for fetching HealthKit data.")
-                    .font(.body)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                
-                Text("You can add data sources in `HKManager`.")
+                Text("It's a simple foundation for fetching HealthKit data. You can modify data sources in `HKManager`.")
                     .font(.body)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)

@@ -1,13 +1,13 @@
 //
-//  HealthKit_SwiftUI_BaseUITests.swift
-//  HealthKit-SwiftUI-BaseUITests
+//  BasalUITests.swift
+//  BasalUITests
 //
 //  Created by Harish Kilaru on 2/24/25.
 //
 
 import XCTest
 
-final class HealthKit_SwiftUI_BaseUITests: XCTestCase {
+final class BasalUITests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.

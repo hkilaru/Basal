@@ -1,6 +1,6 @@
 //
-//  HealthKit_SwiftUI_BaseApp.swift
-//  HealthKit-SwiftUI-Base
+//  BasalApp.swift
+//  Basal
 //
 //  Created by Harish Kilaru on 2/24/25.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct HealthKit_SwiftUI_BaseApp: App {
+struct BasalApp: App {
     @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
     @State private var isWelcomeSheetPresented = false
     @StateObject private var hkManager = HKManager()

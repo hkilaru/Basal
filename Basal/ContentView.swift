@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  HealthKit-SwiftUI-Base
+//  Basal
 //
 //  Created by Harish Kilaru on 2/24/25.
 //
