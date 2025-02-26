@@ -12,8 +12,23 @@ class HKManager: ObservableObject {
         "Heart Rate": 0,
         "Active Energy": 0,
         "Resting Heart Rate": 0,
-        "Heart Rate Variability": 0
+        "Heart Rate Variability": 0,
+        "Height": 0,
+        "Body Mass": 0
     ]
+    
+    // Store the latest values
+    @Published var latestHeartRate: Double = 0
+    @Published var latestSteps: Double = 0
+    @Published var latestHRV: Double = 0
+    
+    // Store individual samples
+    @Published var heartRateSamples: [(value: Double, date: Date, source: String, deviceType: String)] = []
+    @Published var stepsSamples: [(value: Double, date: Date, source: String, deviceType: String)] = []
+    @Published var hrvSamples: [(value: Double, date: Date, source: String, deviceType: String)] = []
+    
+    // Define which metrics have time-series data
+    let timeSeriesMetrics = ["Heart Rate", "Steps", "Heart Rate Variability"]
     
     private var allTypesToRead: Set<HKSampleType> {
         return [
@@ -21,7 +36,10 @@ class HKManager: ObservableObject {
             HKObjectType.quantityType(forIdentifier: .heartRate)!,
             HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
             HKObjectType.quantityType(forIdentifier: .restingHeartRate)!,
-            HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN)!
+            HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN)!,
+            HKObjectType.quantityType(forIdentifier: .height)!,
+            HKObjectType.quantityType(forIdentifier: .bodyMass)!,
+            
         ] as Set<HKSampleType>
     }
     
@@ -74,7 +92,7 @@ class HKManager: ObservableObject {
         let startOfDay = calendar.startOfDay(for: now)
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
         
-        // Create the predicate for the query. A predicate is a filter used to specify the data to be fetched.
+        // Create the predicate for the query
         let startDate = startOfDay
         let endDate = endOfDay
         
@@ -115,6 +133,11 @@ class HKManager: ObservableObject {
             endDate: endDate,
             options: .discreteAverage
         )
+        
+        // Fetch individual samples for timeseries data
+        await fetchHeartRateSamples(startDate: startDate, endDate: endDate)
+        await fetchStepsSamples(startDate: startDate, endDate: endDate)
+        await fetchHRVSamples(startDate: startDate, endDate: endDate)
         
         // Update the UI with all fetched values
         await MainActor.run {
@@ -173,5 +196,174 @@ class HKManager: ObservableObject {
             
             healthStore.execute(statisticsQuery)
         }
+    }
+    
+    // Fetch individual heart rate samples
+    func fetchHeartRateSamples(startDate: Date, endDate: Date) async {
+        let samples = await fetchSamples(
+            for: .heartRate,
+            unit: HKUnit(from: "count/min"),
+            startDate: startDate,
+            endDate: endDate
+        )
+        
+        await MainActor.run {
+            self.heartRateSamples = samples
+            if let firstSample = samples.first {
+                self.latestHeartRate = firstSample.value
+            }
+        }
+    }
+    
+    // Fetch individual steps samples
+    func fetchStepsSamples(startDate: Date, endDate: Date) async {
+        let samples = await fetchSamples(
+            for: .stepCount,
+            unit: HKUnit.count(),
+            startDate: startDate,
+            endDate: endDate
+        )
+        
+        await MainActor.run {
+            self.stepsSamples = samples
+            if let firstSample = samples.first {
+                self.latestSteps = firstSample.value
+            }
+        }
+    }
+    
+    // Fetch individual HRV samples
+    func fetchHRVSamples(startDate: Date, endDate: Date) async {
+        let samples = await fetchSamples(
+            for: .heartRateVariabilitySDNN,
+            unit: HKUnit(from: "ms"),
+            startDate: startDate,
+            endDate: endDate
+        )
+        
+        await MainActor.run {
+            self.hrvSamples = samples
+            if let firstSample = samples.first {
+                self.latestHRV = firstSample.value
+            }
+        }
+    }
+    
+    // Generic function to fetch samples for any quantity type
+    private func fetchSamples(
+        for identifier: HKQuantityTypeIdentifier,
+        unit: HKUnit,
+        startDate: Date,
+        endDate: Date
+    ) async -> [(value: Double, date: Date, source: String, deviceType: String)] {
+        guard let quantityType = HKObjectType.quantityType(forIdentifier: identifier) else {
+            print("Unable to create quantity type for \(identifier)")
+            return []
+        }
+        
+        let predicate = HKQuery.predicateForSamples(
+            withStart: startDate,
+            end: endDate,
+            options: .strictStartDate
+        )
+        
+        // Sort by date, most recent first
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+        
+        return await withCheckedContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: quantityType,
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: [sortDescriptor]
+            ) { _, samples, error in
+                if let error = error {
+                    print("Error fetching \(identifier) samples: \(error.localizedDescription)")
+                    continuation.resume(returning: [])
+                    return
+                }
+                
+                var resultSamples: [(value: Double, date: Date, source: String, deviceType: String)] = []
+                
+                if let samples = samples as? [HKQuantitySample], !samples.isEmpty {
+                    for sample in samples {
+                        let value = sample.quantity.doubleValue(for: unit)
+                        
+                        // Get source information
+                        let sourceInfo = self.determineSourceInfo(from: sample)
+                        
+                        resultSamples.append((
+                            value: value, 
+                            date: sample.endDate, 
+                            source: sourceInfo.name,
+                            deviceType: sourceInfo.type
+                        ))
+                    }
+                }
+                
+                continuation.resume(returning: resultSamples)
+            }
+            
+            healthStore.execute(query)
+        }
+    }
+    
+    // Helper method to determine the source name and type from a sample
+    // so we can display the correct device source
+    private nonisolated func determineSourceInfo(from sample: HKSample) -> (name: String, type: String) {
+        let sourceName = sample.sourceRevision.source.name
+        var deviceType = "Unknown"
+        
+        if let device = sample.device {
+            if let model = device.model {
+                if model.contains("Watch") {
+                    deviceType = "Apple Watch"
+                } else if model.contains("iPhone") {
+                    deviceType = "iPhone"
+                } else {
+                    deviceType = model
+                }
+            }
+        } else {
+            // Fallback to source bundle identifier if no device info
+            let bundleID = sample.sourceRevision.source.bundleIdentifier
+            
+            if bundleID.contains("apple.health") {
+                deviceType = "iPhone"
+            } else if (bundleID.contains("workout") || bundleID.contains("activity")) {
+                deviceType = "Apple Watch"
+            }
+        }
+        
+        return (name: sourceName, type: deviceType)
+    }
+    
+    // Also mark the other helper method as nonisolated
+    private nonisolated func determineSourceName(from sample: HKSample) -> String {
+        if let device = sample.device {
+            if let model = device.model, model.contains("Watch") {
+                return "Apple Watch"
+            } else if let model = device.model, model.contains("iPhone") {
+                return "iPhone"
+            }
+        }
+        
+        let bundleID = sample.sourceRevision.source.bundleIdentifier
+        let sourceName = sample.sourceRevision.source.name
+        
+        let isIPhoneSource = (bundleID.contains("apple.health")) ||
+                             sourceName == "Health" || 
+                             sourceName.contains("iPhone")
+        
+        let isWatchSource = (bundleID.contains("workout") || bundleID.contains("activity")) ||
+                            sourceName.contains("Watch")
+        
+        if isIPhoneSource {
+            return "iPhone"
+        } else if isWatchSource {
+            return "Apple Watch"
+        }
+        
+        return sourceName
     }
 }

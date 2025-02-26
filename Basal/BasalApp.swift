@@ -15,7 +15,7 @@ struct BasalApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            SummaryView()
                 .environmentObject(hkManager)
                 .sheet(isPresented: $isWelcomeSheetPresented) {
                     WelcomeView(isWelcomeSheetPresented: $isWelcomeSheetPresented)

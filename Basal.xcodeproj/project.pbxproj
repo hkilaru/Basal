@@ -12,21 +12,21 @@
 			containerPortal = 3F3330C52D6CE30000D0CD38 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 3F3330CC2D6CE30000D0CD38;
-			remoteInfo = "Basal";
+			remoteInfo = Basal;
 		};
 		3F3330E82D6CE30200D0CD38 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 3F3330C52D6CE30000D0CD38 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 3F3330CC2D6CE30000D0CD38;
-			remoteInfo = "Basal";
+			remoteInfo = Basal;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		3F3330CD2D6CE30000D0CD38 /* Basal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Basal.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		3F3330DD2D6CE30200D0CD38 /* BasalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "BasalTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		3F3330E72D6CE30200D0CD38 /* BasalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "BasalUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F3330CD2D6CE30000D0CD38 /* Basal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Basal.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F3330DD2D6CE30200D0CD38 /* BasalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BasalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F3330E72D6CE30200D0CD38 /* BasalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BasalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -110,10 +110,10 @@
 			fileSystemSynchronizedGroups = (
 				3F3330CF2D6CE30000D0CD38 /* Basal */,
 			);
-			name = "Basal";
+			name = Basal;
 			packageProductDependencies = (
 			);
-			productName = "Basal";
+			productName = Basal;
 			productReference = 3F3330CD2D6CE30000D0CD38 /* Basal.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -133,10 +133,10 @@
 			fileSystemSynchronizedGroups = (
 				3F3330E02D6CE30200D0CD38 /* BasalTests */,
 			);
-			name = "BasalTests";
+			name = BasalTests;
 			packageProductDependencies = (
 			);
-			productName = "BasalTests";
+			productName = BasalTests;
 			productReference = 3F3330DD2D6CE30200D0CD38 /* BasalTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
@@ -156,10 +156,10 @@
 			fileSystemSynchronizedGroups = (
 				3F3330EA2D6CE30200D0CD38 /* BasalUITests */,
 			);
-			name = "BasalUITests";
+			name = BasalUITests;
 			packageProductDependencies = (
 			);
-			productName = "BasalUITests";
+			productName = BasalUITests;
 			productReference = 3F3330E72D6CE30200D0CD38 /* BasalUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
@@ -393,7 +393,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "Basal/Basal.entitlements";
+				CODE_SIGN_ENTITLEMENTS = Basal/Basal.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Basal/Preview Content\"";
@@ -411,7 +411,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.Basal";
+				PRODUCT_BUNDLE_IDENTIFIER = com.harishkilaru.Basal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -424,7 +424,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "Basal/Basal.entitlements";
+				CODE_SIGN_ENTITLEMENTS = Basal/Basal.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Basal/Preview Content\"";
@@ -442,7 +442,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.Basal";
+				PRODUCT_BUNDLE_IDENTIFIER = com.harishkilaru.Basal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -460,7 +460,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.BasalTests";
+				PRODUCT_BUNDLE_IDENTIFIER = com.harishkilaru.BasalTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -479,7 +479,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.BasalTests";
+				PRODUCT_BUNDLE_IDENTIFIER = com.harishkilaru.BasalTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -496,12 +496,12 @@
 				DEVELOPMENT_TEAM = 9BA339SW8L;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.BasalUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = com.harishkilaru.BasalUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = "Basal";
+				TEST_TARGET_NAME = Basal;
 			};
 			name = Debug;
 		};
@@ -513,12 +513,12 @@
 				DEVELOPMENT_TEAM = 9BA339SW8L;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.harishkilaru.BasalUITests";
+				PRODUCT_BUNDLE_IDENTIFIER = com.harishkilaru.BasalUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = "Basal";
+				TEST_TARGET_NAME = Basal;
 			};
 			name = Release;
 		};
