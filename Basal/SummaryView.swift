@@ -20,30 +20,51 @@ struct SummaryView: View {
         "Resting Heart Rate": ("BPM", "heart.circle.fill", .pink, "RESTING HEART RATE"),
         "Heart Rate Variability": ("ms", "waveform.path.ecg", .purple, "HEART RATE VARIABILITY"),
         "Height": ("cm", "person.fill", .blue, "HEIGHT"),
-        "Body Mass": ("kg", "scalemass.fill", .green, "BODY MASS")
+        "Body Mass": ("kg", "scalemass.fill", .green, "BODY MASS"),
+        "Sleep": ("", "bed.double.fill", .blue, "SLEEP")
     ]
     
     var body: some View {
         NavigationView {
             List {
-                ForEach(Array(hkManager.healthData.keys.sorted()), id: \.self) { metric in
-                    if hkManager.timeSeriesMetrics.contains(metric) {
-                        // Navigation link for time-series metrics
+                // Sleep section
+                Section {
+                    if hkManager.sleepData.hasSleepData {
                         NavigationLink {
-                            MetricView(
-                                title: metricInfo[metric]?.title ?? metric.uppercased(),
-                                samples: samplesFor(metric: metric),
-                                unit: metricInfo[metric]?.unit ?? "",
-                                icon: metricInfo[metric]?.icon ?? "questionmark.circle",
-                                color: metricInfo[metric]?.color ?? .gray
-                            )
+                            SleepSummaryView(sleepData: hkManager.sleepData)
                         } label: {
-                            metricRow(for: metric, value: displayValueFor(metric: metric))
+                            sleepRow()
                         }
                     } else {
-                        // Regular row for other metrics
-                        metricRow(for: metric, value: displayValueFor(metric: metric))
+                        sleepRow()
                     }
+                } header: {
+                    Text("Sleep")
+                }
+                
+                // Health metrics section
+                Section {
+                    ForEach(Array(hkManager.healthData.keys.sorted().filter { $0 != "Sleep" }), id: \.self) { metric in
+                        if hkManager.timeSeriesMetrics.contains(metric) {
+                            // Navigation link for time-series metrics
+                            NavigationLink {
+                                MetricView(
+                                    title: metricInfo[metric]?.title ?? metric.uppercased(),
+                                    samples: samplesFor(metric: metric),
+                                    unit: metricInfo[metric]?.unit ?? "",
+                                    icon: metricInfo[metric]?.icon ?? "questionmark.circle",
+                                    color: metricInfo[metric]?.color ?? .gray
+                                )
+                            } label: {
+                                metricRow(for: metric, value: displayValueFor(metric: metric))
+                            }
+                        } else {
+                            // Regular row for other metrics
+                            metricRow(for: metric, value: displayValueFor(metric: metric))
+                        }
+                    }
+                } header: {
+                    Text("Health Metrics")
                 }
             }
             .navigationTitle("Health Data")
@@ -71,6 +92,43 @@ struct SummaryView: View {
                     .environmentObject(hkManager)
             }
         }
+    }
+    
+    // Sleep row with special formatting
+    private func sleepRow() -> some View {
+        HStack(spacing: 12) {
+            // Icon
+            Image(systemName: "bed.double.fill")
+                .foregroundStyle(.blue)
+                .font(.system(size: 24))
+                .frame(width: 32, height: 32)
+            
+            // Sleep info
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Sleep")
+                    .font(.body)
+                
+                if hkManager.sleepData.hasSleepData {
+                    Text(hkManager.sleepData.formattedDateRange)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Spacer()
+            
+            // Value
+            if hkManager.sleepData.hasSleepData {
+                Text(hkManager.sleepData.formattedTotalSleepTime)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+            } else {
+                Text("No Data")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
     }
     
     // Helper function to get the display value for a metric

@@ -1,18 +1,42 @@
 import SwiftUI
 import HealthKit
 
-// MetricView is a view that displays a list of samples for a given metric
-// and the source of each sample.
+// MetricView displays a list of samples for a given metric and the source of
+// each sample.
 struct MetricView: View {
     let title: String
     let samples: [(value: Double, date: Date, source: String, deviceType: String)]
     let unit: String
     let icon: String
     let color: Color
+    let isSleepData: Bool
+    
+    // Initialize with default values
+    init(
+        title: String,
+        samples: [(value: Double, date: Date, source: String, deviceType: String)],
+        unit: String,
+        icon: String,
+        color: Color,
+        isSleepData: Bool = false
+    ) {
+        self.title = title
+        self.samples = samples
+        self.unit = unit
+        self.icon = icon
+        self.color = color
+        self.isSleepData = isSleepData
+    }
     
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d 'at' h:mm a"
+        return formatter
+    }()
+    
+    private let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
         return formatter
     }()
     
@@ -55,15 +79,28 @@ struct MetricView: View {
                                         .frame(width: 20)
                                     
                                     // Value
-                                    Text(formatValue(samples[index].value))
-                                        .font(.body)
-                                        .fontWeight(.medium)
+                                    if isSleepData {
+                                        Text("\(Int(samples[index].value))min")
+                                            .font(.body)
+                                            .fontWeight(.medium)
+                                    } else {
+                                        Text(formatValue(samples[index].value))
+                                            .font(.body)
+                                            .fontWeight(.medium)
+                                    }
                                     
                                     Spacer()
                                     
                                     // Date
-                                    Text(dateFormatter.string(from: samples[index].date))
-                                        .foregroundColor(.secondary)
+                                    if isSleepData {
+                                        // For sleep data, show time range
+                                        let endDate = samples[index].date.addingTimeInterval(TimeInterval(Int(samples[index].value) * 60))
+                                        Text("\(timeFormatter.string(from: samples[index].date)) - \(timeFormatter.string(from: endDate))")
+                                            .foregroundColor(.secondary)
+                                    } else {
+                                        Text(dateFormatter.string(from: samples[index].date))
+                                            .foregroundColor(.secondary)
+                                    }
                                 }
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 12)
@@ -110,6 +147,7 @@ struct MetricView: View {
     
     // Get the appropriate icon for the device type
     private func iconForDeviceType(_ deviceType: String) -> String {
+        print("[MetricView] deviceType: \(deviceType)")
         switch deviceType {
         case "Apple Watch":
             return "applewatch"
