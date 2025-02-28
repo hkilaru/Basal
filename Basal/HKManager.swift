@@ -168,6 +168,8 @@ class HKManager: ObservableObject {
             
             // Update sleep duration in minutes
             healthData["Sleep"] = Double(sleepData.totalSleepDuration)
+            
+            workoutCollection.selectedDate = date
         }
     }
     

@@ -161,8 +161,6 @@ struct DateCircleView: View {
     private var backgroundColor: Color {
         if isSelected {
             return .red
-        } else if isToday {
-            return Color(.systemGray5)
         } else {
             return Color.clear
         }
@@ -171,8 +169,10 @@ struct DateCircleView: View {
     private var textColor: Color {
         if isSelected {
             return .white
+        } else if isToday {
+            return .red
         } else if isFuture {
-            return .gray.opacity(0.5) // Dimmed text for future dates
+            return .gray.opacity(0.5)
         } else {
             return .primary
         }

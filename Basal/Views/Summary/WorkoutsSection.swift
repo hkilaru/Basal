@@ -21,7 +21,7 @@ struct WorkoutsSection: View {
                     }
                 }
             } header: {
-                Text("Today's Workouts")
+                Text("Workouts")
             }
         }
     }

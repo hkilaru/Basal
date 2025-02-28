@@ -213,6 +213,7 @@ enum WorkoutMetric {
 // Collection of workouts
 struct WorkoutCollection {
     var workouts: [WorkoutData] = []
+    var selectedDate: Date = Date()
     
     var hasWorkouts: Bool {
         return !workouts.isEmpty
@@ -233,6 +234,13 @@ struct WorkoutCollection {
         let today = calendar.startOfDay(for: Date())
         
         return workouts.filter { calendar.isDate($0.startDate, inSameDayAs: today) }
+    }
+    
+    var workoutsForSelectedDate: [WorkoutData] {
+        let calendar = Calendar.current
+        let startOfSelectedDay = calendar.startOfDay(for: selectedDate)
+        
+        return workouts.filter { calendar.isDate($0.startDate, inSameDayAs: startOfSelectedDay) }
     }
     
     // Get workouts for a specific month

@@ -30,7 +30,7 @@ struct SummaryView: View {
                     List {
                         SleepSection(sleepData: hkManager.sleepData)
                         
-                        WorkoutsSection(workouts: hkManager.workoutCollection.todaysWorkouts)
+                        WorkoutsSection(workouts: hkManager.workoutCollection.workoutsForSelectedDate)
                         
                         HealthMetricsSection(
                             healthData: hkManager.healthData,
