@@ -147,7 +147,6 @@ struct MetricView: View {
     
     // Get the appropriate icon for the device type
     private func iconForDeviceType(_ deviceType: String) -> String {
-        print("[MetricView] deviceType: \(deviceType)")
         switch deviceType {
         case "Apple Watch":
             return "applewatch"

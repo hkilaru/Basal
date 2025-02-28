@@ -13,8 +13,6 @@ class HKManager: ObservableObject {
         "Active Energy": 0,
         "Resting Heart Rate": 0,
         "Heart Rate Variability": 0,
-        "Height": 0,
-        "Body Mass": 0,
         "Sleep": 0
     ]
     
@@ -36,6 +34,9 @@ class HKManager: ObservableObject {
     // Define which metrics have time-series data
     let timeSeriesMetrics = ["Heart Rate", "Steps", "Heart Rate Variability", "Sleep"]
     
+    // Add loading state
+    @Published var isLoading = false
+    
     private var allTypesToRead: Set<HKSampleType> {
         return [
             HKObjectType.quantityType(forIdentifier: .stepCount)!,
@@ -43,8 +44,6 @@ class HKManager: ObservableObject {
             HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
             HKObjectType.quantityType(forIdentifier: .restingHeartRate)!,
             HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN)!,
-            HKObjectType.quantityType(forIdentifier: .height)!,
-            HKObjectType.quantityType(forIdentifier: .bodyMass)!,
             HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!,
             HKObjectType.workoutType()
         ] as Set<HKSampleType>
@@ -94,12 +93,19 @@ class HKManager: ObservableObject {
     
     // Fetch today's health data
     func fetchTodaysData() async {
+        await fetchHealthData(for: Date())
+    }
+    
+    // Fetch health data for a specific date
+    func fetchHealthData(for date: Date) async {
+        await MainActor.run { isLoading = true }
+        defer { Task { @MainActor in isLoading = false } }
+        
         let calendar = Calendar.current
-        let now = Date()
-        let startOfDay = calendar.startOfDay(for: now)
+        let startOfDay = calendar.startOfDay(for: date)
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
         
-        // Create the predicate for the query
+        // Use these dates for all subsequent fetches
         let startDate = startOfDay
         let endDate = endOfDay
         
@@ -146,11 +152,11 @@ class HKManager: ObservableObject {
         await fetchStepsSamples(startDate: startDate, endDate: endDate)
         await fetchHRVSamples(startDate: startDate, endDate: endDate)
         
-        // Fetch sleep data for last night
-        await fetchLastNightSleepData()
+        // Fetch sleep data for the selected night
+        await fetchSleepData(for: date)
         
-        // Fetch workouts
-        await fetchWorkouts()
+        // Fetch workouts for the selected date
+        await fetchWorkouts(for: date)
         
         // Update the UI with all fetched values
         await MainActor.run {
@@ -385,22 +391,22 @@ class HKManager: ObservableObject {
         return sourceName
     }
     
-    // MARK: - Sleep Data Methods
+    // Sleep Data Methods
     
     /// Fetches sleep data for the previous night
-    func fetchLastNightSleepData() async {
+    func fetchSleepData(for date: Date) async {
         let calendar = Calendar.current
-        let now = Date()
         
-        // Get yesterday's date and today's date
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: now)!
-        let yesterdayStart = calendar.startOfDay(for: yesterday)
-        let todayEnd = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))!
+        // For sleep, we want the night that starts on the previous day
+        // and ends on the selected date
+        let previousDay = calendar.date(byAdding: .day, value: -1, to: date)!
+        let previousDayStart = calendar.startOfDay(for: previousDay)
+        let dayEnd = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: date))!
         
         // Create a predicate for the query
         let predicate = HKQuery.predicateForSamples(
-            withStart: yesterdayStart,
-            end: todayEnd,
+            withStart: previousDayStart,
+            end: dayEnd,
             options: .strictStartDate
         )
         
@@ -456,103 +462,103 @@ class HKManager: ObservableObject {
     
     /// Process sleep samples into a structured SleepData object
     private nonisolated func processSleepSamples(_ samples: [HKSample], into sleepData: inout SleepData) {
-        // Filter for Apple Watch and Health app sources
-        let filteredSamples = samples.filter { sample in
-            let source = sample.sourceRevision.source.bundleIdentifier
-            return source.contains("com.apple.health") || 
-                   source.contains("com.apple.HealthKit") ||
-                   source.contains("com.apple.healthkit") ||
-                   source.contains("com.apple.workout") ||
-                   source.contains("com.apple.sleep")
-        }
         
-        guard !filteredSamples.isEmpty else {
-            print("No valid sleep samples found")
-            return
-        }
+        // Group samples by sleep session using a more natural approach
+        let sortedSamples = samples.sorted { $0.startDate < $1.startDate }
+        var sleepSessions: [[HKSample]] = []
+        var currentSession: [HKSample] = []
         
-        // Find the sleep session with the longest duration
-        var sleepSessions: [SleepSession] = []
+        // Start a new sleep session if someone is awake for more than an hour,
+        // it's likely a different sleep session
+        let sessionGapThreshold: TimeInterval = 60 * 60
         
-        for sample in filteredSamples {
-            guard let categorySample = sample as? HKCategorySample else { continue }
-            
-            let value = categorySample.value
-            let startDate = categorySample.startDate
-            let endDate = categorySample.endDate
-            let duration = endDate.timeIntervalSince(startDate)
-            let sourceInfo = determineSourceInfo(from: sample)
-            
-            // Map HKCategoryValueSleepAnalysis to our SleepStage enum
-            let stage: SleepStage
-            
-            if #available(iOS 16.0, *) {
-                switch value {
-                case HKCategoryValueSleepAnalysis.inBed.rawValue:
-                    stage = .inBed
-                case HKCategoryValueSleepAnalysis.awake.rawValue:
-                    stage = .awake
-                case HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue:
-                    stage = .unspecified
-                case HKCategoryValueSleepAnalysis.asleepREM.rawValue:
-                    stage = .rem
-                case HKCategoryValueSleepAnalysis.asleepCore.rawValue:
-                    stage = .core
-                case HKCategoryValueSleepAnalysis.asleepDeep.rawValue:
-                    stage = .deep
-                default:
-                    stage = .unspecified
+        for sample in sortedSamples {
+            if let lastSample = currentSession.last {
+                // Calculate the gap between this sample and the last one
+                let gap = sample.startDate.timeIntervalSince(lastSample.endDate)
+                
+                // If there's a significant gap, start a new session
+                if gap > sessionGapThreshold {
+                    sleepSessions.append(currentSession)
+                    currentSession = [sample]
+                } else {
+                    // Otherwise, add to current session
+                    currentSession.append(sample)
                 }
             } else {
-                // For iOS 15 and earlier
-                switch value {
-                case HKCategoryValueSleepAnalysis.inBed.rawValue:
-                    stage = .inBed
-                case HKCategoryValueSleepAnalysis.asleep.rawValue:
-                    stage = .unspecified
-                case HKCategoryValueSleepAnalysis.awake.rawValue:
-                    stage = .awake
-                default:
-                    stage = .unspecified
-                }
-            }
-            
-            // Create a sleep interval
-            let interval = SleepInterval(
-                stage: stage,
-                startDate: startDate,
-                endDate: endDate,
-                duration: Int(duration),
-                source: sourceInfo.name,
-                deviceType: sourceInfo.type
-            )
-            
-            // Check if this interval belongs to an existing session or is a new session
-            if let lastSessionIndex = sleepSessions.indices.last,
-               let lastIntervalEndDate = sleepSessions[lastSessionIndex].intervals.last?.endDate,
-               startDate.timeIntervalSince(lastIntervalEndDate) < 3600 { // Less than 1 hour gap
-                // Add to existing session
-                sleepSessions[lastSessionIndex].intervals.append(interval)
-            } else {
-                // Create a new session
-                let session = SleepSession(intervals: [interval])
-                sleepSessions.append(session)
+                // First sample
+                currentSession.append(sample)
             }
         }
         
-        // Find the session with the most sleep data
-        if let mainSession = sleepSessions.max(by: { $0.totalDuration < $1.totalDuration }) {
-            // Sort intervals by start date
-            let sortedIntervals = mainSession.intervals.sorted { $0.startDate < $1.startDate }
-            
-            // Group intervals by stage
+        // Add the last session if not empty
+        if !currentSession.isEmpty {
+            sleepSessions.append(currentSession)
+        }
+                
+        // Find the most recent session that ends within our date range
+        if let mostRecentSession = sleepSessions.last {            
+            // Process only the most recent session
             var awakeIntervals: [SleepInterval] = []
             var remIntervals: [SleepInterval] = []
             var coreIntervals: [SleepInterval] = []
             var deepIntervals: [SleepInterval] = []
             
-            for interval in sortedIntervals {
-                switch interval.stage {
+            for sample in mostRecentSession {
+                guard let categorySample = sample as? HKCategorySample else { continue }
+                
+                let value = categorySample.value
+                let startDate = categorySample.startDate
+                let endDate = categorySample.endDate
+                let duration = endDate.timeIntervalSince(startDate)
+                let sourceInfo = determineSourceInfo(from: sample)
+                
+                // Map HKCategoryValueSleepAnalysis to our SleepStage enum
+                let stage: SleepStage
+                
+                if #available(iOS 16.0, *) {
+                    switch value {
+                    case HKCategoryValueSleepAnalysis.inBed.rawValue:
+                        stage = .inBed
+                    case HKCategoryValueSleepAnalysis.awake.rawValue:
+                        stage = .awake
+                    case HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue:
+                        stage = .unspecified
+                    case HKCategoryValueSleepAnalysis.asleepREM.rawValue:
+                        stage = .rem
+                    case HKCategoryValueSleepAnalysis.asleepCore.rawValue:
+                        stage = .core
+                    case HKCategoryValueSleepAnalysis.asleepDeep.rawValue:
+                        stage = .deep
+                    default:
+                        continue // Skip unknown stages
+                    }
+                } else {
+                    // For iOS 15 and earlier
+                    switch value {
+                    case HKCategoryValueSleepAnalysis.inBed.rawValue:
+                        stage = .inBed
+                    case HKCategoryValueSleepAnalysis.asleep.rawValue:
+                        stage = .unspecified
+                    case HKCategoryValueSleepAnalysis.awake.rawValue:
+                        stage = .awake
+                    default:
+                        continue // Skip unknown stages
+                    }
+                }
+                
+                // Create a sleep interval
+                let interval = SleepInterval(
+                    stage: stage,
+                    startDate: startDate,
+                    endDate: endDate,
+                    duration: Int(duration),
+                    source: sourceInfo.name,
+                    deviceType: sourceInfo.type
+                )
+                
+                // Add to appropriate array
+                switch stage {
                 case .awake:
                     awakeIntervals.append(interval)
                 case .rem:
@@ -562,38 +568,40 @@ class HKManager: ObservableObject {
                 case .deep:
                     deepIntervals.append(interval)
                 case .inBed, .unspecified:
-                    // Skip these for now
-                    break
+                    break // Skip these stages
                 }
             }
             
-            // Calculate total sleep time (excluding awake time)
-            let totalSleepTime = remIntervals.reduce(0) { $0 + $1.duration } +
-                                coreIntervals.reduce(0) { $0 + $1.duration } +
-                                deepIntervals.reduce(0) { $0 + $1.duration }
-            
-            // Set the sleep data
-            sleepData.date = sortedIntervals.first?.startDate ?? Date()
+            // Update sleep data
             sleepData.awakeIntervals = awakeIntervals
             sleepData.remIntervals = remIntervals
             sleepData.coreIntervals = coreIntervals
             sleepData.deepIntervals = deepIntervals
+            
+            // Calculate total sleep duration (excluding awake time)
+            let totalSleepTime = remIntervals.reduce(0) { $0 + $1.duration } +
+                                 coreIntervals.reduce(0) { $0 + $1.duration } +
+                                 deepIntervals.reduce(0) { $0 + $1.duration }
+            
             sleepData.totalSleepDuration = totalSleepTime
             
-            // Find the overall start and end time of the sleep session
-            if let firstInterval = sortedIntervals.first, let lastInterval = sortedIntervals.last {
+            // Set start and end times based on all intervals
+            let allIntervals = awakeIntervals + remIntervals + coreIntervals + deepIntervals
+            if let firstInterval = allIntervals.min(by: { $0.startDate < $1.startDate }),
+               let lastInterval = allIntervals.max(by: { $0.endDate < $1.endDate }) {
                 sleepData.startTime = firstInterval.startDate
                 sleepData.endTime = lastInterval.endDate
             }
+        } else {
+            print("No sleep sessions found")
         }
     }
     
-    // MARK: - Workout Methods
+    // Workout Methods
     
-    func fetchWorkouts() async {
+    func fetchWorkouts(for date: Date) async {
         let calendar = Calendar.current
-        let now = Date()
-        let startOfDay = calendar.startOfDay(for: now)
+        let startOfDay = calendar.startOfDay(for: date)
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
         
         // Create the predicate for the query
@@ -644,7 +652,7 @@ class HKManager: ObservableObject {
                         startDate: workout.startDate,
                         endDate: workout.endDate,
                         duration: workout.duration,
-                        totalEnergyBurned: workout.totalEnergyBurned?.doubleValue(for: .kilocalorie()),
+                        totalEnergyBurned: workout.statistics(for: HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!)?.sumQuantity()?.doubleValue(for: .kilocalorie()),
                         totalDistance: workout.totalDistance?.doubleValue(for: .meter()),
                         source: sourceInfo.name,
                         deviceType: sourceInfo.type,
