@@ -20,6 +20,10 @@ class HKManager: ObservableObject {
     @Published var latestHeartRate: Double = 0
     @Published var latestHRV: Double = 0
     
+    // Loading states
+    @Published private(set) var loadingDate: Date? = nil
+    @Published private(set) var isBackgroundLoading = false
+    
     // Store individual samples
     @Published var heartRateSamples: [(value: Double, date: Date, source: String, deviceType: String)] = []
     @Published var stepsSamples: [(value: Double, date: Date, source: String, deviceType: String)] = []
@@ -31,11 +35,21 @@ class HKManager: ObservableObject {
     // Workout data
     @Published var workoutCollection: WorkoutCollection = WorkoutCollection()
     
+    // Cache for background-fetched data
+    private var cachedHealthData: [Date: [String: Double]] = [:]
+    private var cachedSleepData: [Date: SleepData] = [:]
+    private var cachedWorkouts: [WorkoutData] = []
+    private var cachedSamples: [Date: (
+        heartRate: [(value: Double, date: Date, source: String, deviceType: String)],
+        steps: [(value: Double, date: Date, source: String, deviceType: String)],
+        hrv: [(value: Double, date: Date, source: String, deviceType: String)]
+    )] = [:]
+    
     // Define which metrics have time-series data
     let timeSeriesMetrics = ["Heart Rate", "Steps", "Heart Rate Variability", "Sleep"]
     
-    // Add loading state
-    @Published var isLoading = false
+    // Add this property to the HKManager class
+    @Published private(set) var fetchedDates: [Date: Bool] = [:]
     
     private var allTypesToRead: Set<HKSampleType> {
         return [
@@ -97,10 +111,7 @@ class HKManager: ObservableObject {
     }
     
     // Fetch health data for a specific date
-    func fetchHealthData(for date: Date) async {
-        await MainActor.run { isLoading = true }
-        defer { Task { @MainActor in isLoading = false } }
-        
+    func fetchHealthData(for date: Date, updateSelectedDate: Bool = true, inBackground: Bool = false) async {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: date)
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
@@ -148,28 +159,60 @@ class HKManager: ObservableObject {
         )
         
         // Fetch individual samples for timeseries data
-        await fetchHeartRateSamples(startDate: startDate, endDate: endDate)
-        await fetchStepsSamples(startDate: startDate, endDate: endDate)
-        await fetchHRVSamples(startDate: startDate, endDate: endDate)
+        let hrSamples = await fetchHeartRateSamples(startDate: startDate, endDate: endDate)
+        let stepsSamples = await fetchStepsSamples(startDate: startDate, endDate: endDate)
+        let hrvSamples = await fetchHRVSamples(startDate: startDate, endDate: endDate)
         
         // Fetch sleep data for the selected night
-        await fetchSleepData(for: date)
+        let sleepData = await fetchSleepDataForDate(date)
         
         // Fetch workouts for the selected date
-        await fetchWorkouts(for: date)
+        let workouts = await fetchWorkoutsForDate(date)
         
-        // Update the UI with all fetched values
         await MainActor.run {
-            healthData["Steps"] = stepsCount
-            healthData["Heart Rate"] = heartRateValue
-            healthData["Active Energy"] = energyBurned
-            healthData["Resting Heart Rate"] = restingHeartRateValue
-            healthData["Heart Rate Variability"] = heartRateVariabilitySDNNValue
+            let newHealthData: [String: Double] = [
+                "Steps": stepsCount,
+                "Heart Rate": heartRateValue,
+                "Active Energy": energyBurned,
+                "Resting Heart Rate": restingHeartRateValue,
+                "Heart Rate Variability": heartRateVariabilitySDNNValue,
+                "Sleep": Double(sleepData.totalSleepDuration)
+            ]
             
-            // Update sleep duration in minutes
-            healthData["Sleep"] = Double(sleepData.totalSleepDuration)
-            
-            workoutCollection.selectedDate = date
+            if inBackground {
+                // Store in cache
+                self.cachedHealthData[startOfDay] = newHealthData
+                self.cachedSleepData[startOfDay] = sleepData
+                self.cachedWorkouts.append(contentsOf: workouts)
+                self.cachedSamples[startOfDay] = (
+                    heartRate: hrSamples,
+                    steps: stepsSamples,
+                    hrv: hrvSamples
+                )
+            } else {
+                // Update displayed data
+                self.healthData = newHealthData
+                self.sleepData = sleepData
+                
+                // Update samples
+                self.heartRateSamples = hrSamples
+                self.stepsSamples = stepsSamples
+                self.hrvSamples = hrvSamples
+                
+                // Update latest values if available
+                if let firstHR = hrSamples.first {
+                    self.latestHeartRate = firstHR.value
+                }
+                if let firstHRV = hrvSamples.first {
+                    self.latestHRV = firstHRV.value
+                }
+                
+                // Only update workouts if not in background
+                if updateSelectedDate {
+                    self.workoutCollection.selectedDate = date
+                }
+                self.workoutCollection.workouts = workouts
+            }
         }
     }
     
@@ -223,7 +266,7 @@ class HKManager: ObservableObject {
     }
     
     // Fetch individual heart rate samples
-    func fetchHeartRateSamples(startDate: Date, endDate: Date) async {
+    func fetchHeartRateSamples(startDate: Date, endDate: Date) async -> [(value: Double, date: Date, source: String, deviceType: String)] {
         let samples = await fetchSamples(
             for: .heartRate,
             unit: HKUnit(from: "count/min"),
@@ -231,16 +274,11 @@ class HKManager: ObservableObject {
             endDate: endDate
         )
         
-        await MainActor.run {
-            self.heartRateSamples = samples
-            if let firstSample = samples.first {
-                self.latestHeartRate = firstSample.value
-            }
-        }
+        return samples
     }
     
     // Fetch individual steps samples
-    func fetchStepsSamples(startDate: Date, endDate: Date) async {
+    func fetchStepsSamples(startDate: Date, endDate: Date) async -> [(value: Double, date: Date, source: String, deviceType: String)] {
         let samples = await fetchSamples(
             for: .stepCount,
             unit: HKUnit.count(),
@@ -248,13 +286,11 @@ class HKManager: ObservableObject {
             endDate: endDate
         )
         
-        await MainActor.run {
-            self.stepsSamples = samples
-        }
+        return samples
     }
     
     // Fetch individual HRV samples
-    func fetchHRVSamples(startDate: Date, endDate: Date) async {
+    func fetchHRVSamples(startDate: Date, endDate: Date) async -> [(value: Double, date: Date, source: String, deviceType: String)] {
         let samples = await fetchSamples(
             for: .heartRateVariabilitySDNN,
             unit: HKUnit(from: "ms"),
@@ -262,12 +298,7 @@ class HKManager: ObservableObject {
             endDate: endDate
         )
         
-        await MainActor.run {
-            self.hrvSamples = samples
-            if let firstSample = samples.first {
-                self.latestHRV = firstSample.value
-            }
-        }
+        return samples
     }
     
     // Generic function to fetch samples for any quantity type
@@ -396,7 +427,7 @@ class HKManager: ObservableObject {
     // Sleep Data Methods
     
     /// Fetches sleep data for the previous night
-    func fetchSleepData(for date: Date) async {
+    func fetchSleepDataForDate(_ date: Date) async -> SleepData {
         let calendar = Calendar.current
         
         // For sleep, we want the night that starts on the previous day
@@ -415,7 +446,7 @@ class HKManager: ObservableObject {
         // Get the sleep analysis category type
         guard let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else {
             print("Sleep Analysis is not available in HealthKit")
-            return
+            return SleepData()
         }
         
         // Sort by start date, most recent first
@@ -450,16 +481,13 @@ class HKManager: ObservableObject {
         
         guard let samples = samples else {
             print("Failed to fetch sleep samples")
-            return
+            return SleepData()
         }
         
         // Process the sleep samples
         processSleepSamples(samples, into: &newSleepData)
         
-        // Update the sleep data on the main actor
-        await MainActor.run {
-            self.sleepData = newSleepData
-        }
+        return newSleepData
     }
     
     /// Process sleep samples into a structured SleepData object
@@ -601,7 +629,7 @@ class HKManager: ObservableObject {
     
     // Workout Methods
     
-    func fetchWorkouts(for date: Date) async {
+    func fetchWorkoutsForDate(_ date: Date) async -> [WorkoutData] {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: date)
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
@@ -669,12 +697,10 @@ class HKManager: ObservableObject {
                 }
             }
             
-            // Update the workout collection on the main actor
-            await MainActor.run {
-                self.workoutCollection.workouts = workouts
-            }
+            return workouts
         } catch {
             print("Error fetching workouts: \(error.localizedDescription)")
+            return []
         }
     }
     
@@ -828,6 +854,120 @@ class HKManager: ObservableObject {
             }
             
             healthStore.execute(statisticsQuery)
+        }
+    }
+    
+    // Helper to apply cached data for a specific date
+    private func applyCachedData(for date: Date) {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        
+        if let cachedHealth = cachedHealthData[startOfDay] {
+            healthData = cachedHealth
+        }
+        
+        if let cachedSleep = cachedSleepData[startOfDay] {
+            sleepData = cachedSleep
+        }
+        
+        if let cachedSamplesForDate = cachedSamples[startOfDay] {
+            heartRateSamples = cachedSamplesForDate.heartRate
+            stepsSamples = cachedSamplesForDate.steps
+            hrvSamples = cachedSamplesForDate.hrv
+            
+            if let firstHR = cachedSamplesForDate.heartRate.first {
+                latestHeartRate = firstHR.value
+            }
+            if let firstHRV = cachedSamplesForDate.hrv.first {
+                latestHRV = firstHRV.value
+            }
+        }
+        
+        // Update workouts
+        let workoutsForDate = cachedWorkouts.filter {
+            calendar.isDate($0.startDate, inSameDayAs: startOfDay)
+        }
+        workoutCollection.workouts = workoutsForDate
+    }
+    
+    // Fetch data for a specific date, marking it as fetched if successful
+    func fetchHealthDataIfNeeded(for date: Date, inBackground: Bool = false) async {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        
+        // First check if we have cached data for this date
+        if !calendar.isDateInToday(date) && fetchedDates[startOfDay] == true {
+            // If we have cached data, apply it regardless of background mode
+            await MainActor.run {
+                applyCachedData(for: date)
+                if !inBackground {
+                    workoutCollection.selectedDate = date
+                }
+            }
+            return
+        }
+        
+        // If no cached data or it's today, fetch new data
+        if shouldFetchDataFor(date) {
+            if !inBackground {
+                await MainActor.run { loadingDate = date }
+            }
+            
+            await fetchHealthData(for: date, updateSelectedDate: !inBackground, inBackground: inBackground)
+            
+            // Mark the date as fetched if it's not today
+            if !Calendar.current.isDateInToday(date) {
+                await MainActor.run {
+                    fetchedDates[calendar.startOfDay(for: date)] = true
+                    if !inBackground {
+                        loadingDate = nil
+                    }
+                }
+            } else {
+                await MainActor.run {
+                    if !inBackground {
+                        loadingDate = nil
+                    }
+                }
+            }
+        }
+    }
+    
+    // Helper to check if a date needs to be fetched
+    private func shouldFetchDataFor(_ date: Date) -> Bool {
+        let calendar = Calendar.current
+        // Always fetch today's data
+        if calendar.isDateInToday(date) {
+            return true
+        }
+        // For other dates, only fetch if not already fetched
+        return fetchedDates[calendar.startOfDay(for: date)] != true
+    }
+    
+    // Add a method to fetch data for the last 30 days
+    func fetchLast30DaysData() async {
+        let calendar = Calendar.current
+        let today = Date()
+        
+        // Always fetch today's data first (not in background)
+        await fetchHealthDataIfNeeded(for: today)
+        
+        // Create an array of the last 29 days (excluding today)
+        let last29Days = (1..<30).map { calendar.date(byAdding: .day, value: -$0, to: today)! }
+        
+        // Filter out dates that have already been fetched
+        let datesToFetch = last29Days.filter { !fetchedDates.keys.contains(calendar.startOfDay(for: $0)) }
+        
+        if !datesToFetch.isEmpty {
+            // Set background loading state
+            await MainActor.run { isBackgroundLoading = true }
+            
+            // Fetch historical data in background
+            for date in datesToFetch {
+                await fetchHealthDataIfNeeded(for: date, inBackground: true)
+            }
+            
+            await MainActor.run { isBackgroundLoading = false }
         }
     }
 }

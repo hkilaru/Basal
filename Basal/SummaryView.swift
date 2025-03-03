@@ -12,6 +12,7 @@ struct SummaryView: View {
     @EnvironmentObject var hkManager: HKManager
     @State private var showWelcomeSheet = false
     @State private var selectedDate = Date()
+    @Environment(\.scenePhase) private var scenePhase
     
     var body: some View {
         NavigationView {
@@ -21,7 +22,7 @@ struct SummaryView: View {
                         selectedDate: $selectedDate,
                         onDateSelected: { date in
                             Task {
-                                await hkManager.fetchHealthData(for: date)
+                                await hkManager.fetchHealthDataIfNeeded(for: date)
                             }
                         }
                     )
@@ -46,7 +47,8 @@ struct SummaryView: View {
                 }
                 
                 // Loading overlay
-                if hkManager.isLoading {
+                if let loadingDate = hkManager.loadingDate,
+                   Calendar.current.isDate(loadingDate, inSameDayAs: selectedDate) {
                     Color.black.opacity(0.2)
                         .ignoresSafeArea()
                     ProgressView()
@@ -60,7 +62,7 @@ struct SummaryView: View {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     Button {
                         Task {
-                            await hkManager.fetchHealthData(for: selectedDate)
+                            await hkManager.fetchHealthDataIfNeeded(for: selectedDate)
                         }
                     } label: {
                         Image(systemName: "arrow.clockwise")
@@ -78,7 +80,15 @@ struct SummaryView: View {
         }
         .task {
             // Initial data fetch
-            await hkManager.fetchHealthData(for: selectedDate)
+            await hkManager.fetchHealthDataIfNeeded(for: selectedDate)
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            // Fetch last 30 days of data when app becomes active
+            if newPhase == .active {
+                Task {
+                    await hkManager.fetchLast30DaysData()
+                }
+            }
         }
         .sheet(isPresented: $showWelcomeSheet) {
             WelcomeView(isWelcomeSheetPresented: $showWelcomeSheet)
